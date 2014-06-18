@@ -1,0 +1,243 @@
+<?php
+
+require_once 'ajaxification.hacks.inc';
+
+/**
+ * Implements hook_init().
+ */
+function ajaxification_init() {
+  _ajaxification_the_last_alter('js');
+  _ajaxification_the_last_alter('css');
+}
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function ajaxification_preprocess_html(&$html) {
+  $configurations = _ajaxification_get_configurations();
+  if (empty($configurations)) {
+    return;
+  }
+  drupal_add_js(drupal_get_path('module', 'ajaxification') . '/ajaxification.js', array(
+    'scope' => 'footer',
+  ));
+  drupal_add_js(array(
+    'ajaxification' => array(
+      'configurations' => $configurations,
+    ),
+  ), 'setting');
+  drupal_add_library('system', 'drupal.ajax');
+}
+
+/**
+ * Implements hook_drupal_goto_alter().
+ */
+function ajaxification_drupal_goto_alter(&$path, &$options, &$http_response_code) {
+  if ($configuration = _ajaxification_get_active_configuration()) {
+    $options['query']['ajaxification_cfg_id'] = $configuration['id'];
+    $options['query']['ajaxification_page_state'] = $_REQUEST['ajaxification_page_state'];
+  }
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ajaxification_module_implements_alter(&$implementations, $hook) {
+  $run_last = array(
+    'page_delivery_callback_alter',
+    'drupal_goto_alter',
+  );
+  if (in_array($hook, $run_last)) {
+    $group = $implementations['ajaxification'];
+    unset($implementations['ajaxification']);
+    $implementations['ajaxification'] = $group;
+  }
+}
+
+/**
+ * Implements hook_js_alter().
+ */
+function ajaxification_js_alter(&$js) {
+  _ajaxification_process_resources($js, 'js');
+}
+
+/**
+ * Implements hook_css_alter().
+ */
+function ajaxification_css_alter(&$css) {
+  _ajaxification_process_resources($css, 'css');
+}
+
+/**
+ * Implements hook_page_delivery_callback_alter().
+ */
+function ajaxification_page_delivery_callback_alter(&$callback) {
+  if (_ajaxification_get_active_configuration()) {
+    $callback = 'ajaxification_deliver_page';
+  }
+}
+
+/**
+ * Delivery callback.
+ */
+function ajaxification_deliver_page($page_callback_result) {
+  //AXXX handle numeric results
+  drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
+  $url = url($_GET['q'], array(
+    'absolute' => TRUE,
+    'query' => drupal_get_query_parameters(NULL, array('q', 'ajaxification', 'ajaxification_cfg_id', 'ajaxification_page_state')),
+  ));
+  $html = drupal_render_page($page_callback_result);
+  $configuration = _ajaxification_get_active_configuration();
+  $data = _ajaxification_parse_response_data($html, $configuration);
+
+  _ajaxification_process_ajax_page_state();
+  $ajax_commands = _ajaxification_ajax_render();
+
+  print(drupal_json_encode(array(
+    'url' => $url,
+    'ajax_commands' => drupal_json_decode($ajax_commands),
+  ) + $data));
+}
+
+/**
+ * Converts shorten ajax page state to the normal one, so Drupal can use it.
+ */
+function _ajaxification_process_ajax_page_state() {
+  if (!isset($_REQUEST['ajaxification_page_state']) || !is_string($_REQUEST['ajaxification_page_state'])) {
+    return;
+  }
+  $page_state = explode('/', $_REQUEST['ajaxification_page_state']);
+  if (count($page_state) < 2) {
+    return;
+  }
+  $_POST['ajax_page_state']['theme'] = (string) array_shift($page_state);
+  $_POST['ajax_page_state']['theme_token'] = (string) array_shift($page_state);
+  $map = _ajaxification_resource_to_id_map();
+  foreach ($page_state as $resource_id) {
+    foreach ($map as $type => $_) {
+      if (($key = array_search($resource_id, $map[$type])) !== FALSE) {
+        $_POST['ajax_page_state'][$type][$key] = 1;
+        break;
+      }
+    }
+  }
+}
+
+/**
+ * Parses HTML and fetches some data from it.
+ *
+ * @param string $html
+ *   Document HTML code.
+ * @param array $configuration
+ *   Currently active configuration.
+ *
+ * @return array
+ *   Array contains:
+ *   - "bodyClass": the content os the class attribute of the body tag.
+ *   - "pageTitle": head > title inner HTML
+ *   - "h1": contents of the h1 tag; if document contains more/less than one h1
+ *     tag, it's skipped
+ *   - "content": the content (as a string) of the replaceWrapper
+ */
+function _ajaxification_parse_response_data($html, $configuration) {
+  $data = array();
+
+  if (function_exists('libxml_use_internal_errors')) {
+    libxml_use_internal_errors(TRUE);
+  }
+  // UTF-8 fix from http://php.net/manual/en/domdocument.loadhtml.php#95251
+  $doc = new DOMDocument();
+  $doc->strictErrorChecking = FALSE;
+  $doc->loadHTML('<?xml encoding="UTF-8">' . $html);
+  foreach ($doc->childNodes as $item) {
+    if ($item->nodeType == XML_PI_NODE) {
+      $doc->removeChild($item);
+    }
+  }
+  $doc->encoding = 'UTF-8';
+
+  $data['bodyClass'] = qp($doc, 'body')->attr('class');
+  $data['pageTitle'] = qp($doc, 'head title')->innerHTML();
+  $h1 = qp($doc, 'h1e');
+  if ($h1->size() === 1) {
+    $data['h1'] = $h1->innerHTML();
+  }
+
+  $selector = $configuration['replaceWrapperSelector'];
+  if (isset($configuration['replaceWrapperContextSelector'])) {
+    $selector = $configuration['replaceWrapperContextSelector'] . ' ' . $selector;
+  }
+  $data['content'] = qp($doc, $selector)->innerHTML();
+
+  return $data;
+}
+
+/**
+ * Returns all defined configurations.
+ *
+ * @return array
+ */
+function _ajaxification_get_configurations() {
+  $configurations =& drupal_static(__FUNCTION__);
+  if ($configurations === NULL) {
+    $configurations = module_invoke_all('ajaxification_configurations');
+    foreach ($configurations as $id => $configuration) {
+      $configurations[$id]['id'] = $id;
+    }
+  }
+  return $configurations;
+}
+
+/**
+ * Returns currently active configuration.
+ *
+ * @return array|null
+ */
+function _ajaxification_get_active_configuration() {
+  $return =& drupal_static(__FUNCTION__, FALSE);
+  if ($return === FALSE) {
+    $return = NULL;
+    if (isset($_REQUEST['ajaxification_cfg_id']) && is_string($_REQUEST['ajaxification_cfg_id'])) {
+      $configurations = _ajaxification_get_configurations();
+      if (isset($configurations[$_REQUEST['ajaxification_cfg_id']])) {
+        $return = $configurations[$_REQUEST['ajaxification_cfg_id']];
+      }
+    }
+  }
+  return $return;
+}
+
+/**
+ * Updates resource-to-id map, and adds that map as JS setting.
+ *
+ * @param array $data
+ *   JS or CSS array that comes from hook_js_alter() or hook_css_alter().
+ * @param string $type
+ *   The type of array: "js" or "css".
+ */
+function _ajaxification_process_resources($data, $type) {
+  $map = _ajaxification_resource_to_id_map();
+  foreach ($data as $key => $_data) {
+    if ($_data['type'] == 'file') {
+      if (!isset($map[$type][$key])) {
+        $map[$type][$key] = base_convert(count($map['css']) + count($map['js']), 10, 36);
+      }
+    }
+  }
+  _ajaxification_resource_to_id_map($map);
+  if (_ajaxification_get_configurations()) {
+    drupal_add_js(array('ajaxification' => array('resource_to_id_map' => $map)), 'setting');
+  }
+}
+
+/**
+ * Manages the "ajaxification_resource_to_id_map" variable.
+ */
+function _ajaxification_resource_to_id_map($set = NULL) {
+  if ($set !== NULL) {
+    variable_set('ajaxification_resource_to_id_map', $set);
+  }
+  $map = variable_get('ajaxification_resource_to_id_map', array('js' => array(), 'css' => array()));
+  return $map;
+}

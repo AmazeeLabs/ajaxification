@@ -1,0 +1,7 @@
+name = Ajaxification
+description = Provide an ability to ajaxify any part of a site.
+core = 7.x
+
+package = Ajax
+
+dependencies[] = querypath
