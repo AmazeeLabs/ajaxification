@@ -74,6 +74,7 @@ TBD
 ## TODO
 
 1. Provide the default styles for the AJAX indicatior.
+1. Merge body classes, but remove "page-*" before the merge.
 1. Fill "How Drupal AJAX is used" section in the README.
 1. Provide an admin UI which will simple implement the
 `ajaxification_configurations` hook.
