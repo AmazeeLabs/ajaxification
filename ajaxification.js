@@ -8,8 +8,8 @@
 
   // Go through configurations, and choose one.
   $.each(settings.configurations, function(cfgId, cfg) {
-    var selector = (cfg.replaceWrapperContextSelector ? cfg.replaceWrapperContextSelector + ' ' : '')
-        + cfg.replaceWrapperSelector;
+    var selector = (cfg.selectors.replaceWrapperContext ? cfg.selectors.replaceWrapperContext + ' ' : '')
+        + cfg.selectors.replaceWrapper;
     ajaxification.$replaceWrapper = $(selector);
     if (ajaxification.$replaceWrapper.size()) {
       ajaxification.cfgId = cfgId;
@@ -35,8 +35,8 @@
   Drupal.behaviors.ajaxification = {
     attach : function(context, _) {
 
-      var $ajaxRegions = ajaxification.cfg.ajaxRegionsSelector
-          ? $(ajaxification.cfg.ajaxRegionsSelector, ajaxification.$replaceWrapper)
+      var $ajaxRegions = ajaxification.cfg.selectors.triggerRegions
+          ? $(ajaxification.cfg.selectors.triggerRegions, ajaxification.$replaceWrapper)
           : ajaxification.$replaceWrapper;
 
       // Go through all given regions and ajaxify them.
@@ -68,7 +68,7 @@
                     }
                   }
                 }
-                ajaxification.doAjax(url, $form.attr('method'), data, ajaxification.cfg.scrollToSelector);
+                ajaxification.doAjax(url, $form.attr('method'), data, ajaxification.cfg.selectors.scrollTo);
                 return false;
               });
               // Remove core ajax handlers from submit buttons. This can be
@@ -165,13 +165,15 @@
        * Should be initialized outside.
        */
       cfg: {
-        replaceWrapperContextSelector: '',
-        replaceWrapperSelector: '',
-        ajaxRegionsSelector: '',
-        historyApiOnly: '',
-        basePaths: '',
-        trackPageViewWithGA: '',
-        reloadOnHistoryWalk: ''
+        selectors: {
+          replaceWrapperContext: null,
+          replaceWrapper: null,
+          triggerRegions: null
+        },
+        historyApiOnly: null,
+        basePaths: null,
+        trackPageViewWithGA: null,
+        reloadOnHistoryWalk: null
       },
 
       /**
@@ -217,6 +219,7 @@
        * Tracks page view with Google Analytics.
        */
       trackPageWithGA: function() {
+        //AXXX update with latest code: https://github.com/AmazeeLabs/exped/blob/ad3c015/sites/all/modules/custom/ajax_search/js/ajax_search.js#L23
         if (_gaq && _gaq.push) {
           _gaq.push(['_trackPageview']);
         }
@@ -360,7 +363,7 @@
             }
           }
         }
-        data.push({name: 'ajaxification_page_state', value: state.join('/')});
+        data.push({name: 'ajaxification_page_state', value: state.join(' ')});
 
         self.request = $.ajax({
           url: url,
@@ -381,8 +384,8 @@
             self.restorePageState(response.url);
             self.hideProgress();
 
-            if (self.cfg.scrollToSelector) {
-              var offset = $(self.cfg.scrollToSelector).eq(0).offset();
+            if (self.cfg.selectors.scrollTo) {
+              var offset = $(self.cfg.selectors.scrollTo).eq(0).offset();
               if (offset && offset.top) {
                 $('html, body').animate({scrollTop: offset.top}, 'fast');
               }

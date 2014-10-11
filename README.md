@@ -37,7 +37,7 @@ are common actions:
 
 ### The first full page load
 
-    - find first configuration where ($(replaceWrapperContextSelector + ' ' + replaceWrapperSelector) > 0)
+    - find first configuration where ($(selectors.replaceWrapperContext + ' ' + selectors.replaceWrapper) > 0)
     - if (no proper configuration was found): break execution
     - if (historyApiOnly && browser does not support History API): break execution
     - savePageState()
@@ -57,7 +57,7 @@ replaceWrapper) and href/action starts with on of basePaths.
       - savePageState() providing data from the response
       - restorePageState()
       - hide progress indicator
-      - scroll to scrollToSelector (if any)
+      - scroll to selectors.scrollTo (if any)
 
 ### History navigation (on popstate event)
 
@@ -77,4 +77,4 @@ TBD
 1. Merge body classes, but remove "page-*" before the merge.
 1. Fill "How Drupal AJAX is used" section in the README.
 1. Provide an admin UI which will simple implement the
-`ajaxification_configurations` hook.
+`ajaxification_configurations` hook (save as `ajaxification_configuration_{id}` variable).

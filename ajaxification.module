@@ -34,8 +34,28 @@ function ajaxification_preprocess_html(&$html) {
  */
 function ajaxification_drupal_goto_alter(&$path, &$options, &$http_response_code) {
   if ($configuration = _ajaxification_get_active_configuration()) {
+    $url_alter_disabled =& drupal_static('ajaxification_url_outbound_alter_disabled');
+    $url_alter_disabled = TRUE;
     $options['query']['ajaxification_cfg_id'] = $configuration['id'];
     $options['query']['ajaxification_page_state'] = $_REQUEST['ajaxification_page_state'];
+    drupal_static_reset('ajaxification_url_outbound_alter_disabled');
+  }
+}
+
+/**
+ * Implements hook_url_outbound_alter().
+ */
+function ajaxification_url_outbound_alter(&$path, &$options, $original_path) {
+  if (drupal_static('ajaxification_url_outbound_alter_disabled')) {
+    return;
+  }
+
+  // Some code may preserve all query parameters. Avoid this.
+  if (isset($options['query']['ajaxification_cfg_id'])) {
+    unset($options['query']['ajaxification_cfg_id']);
+  }
+  if (isset($options['query']['ajaxification_page_state'])) {
+    unset($options['query']['ajaxification_page_state']);
   }
 }
 
@@ -46,6 +66,7 @@ function ajaxification_module_implements_alter(&$implementations, $hook) {
   $run_last = array(
     'page_delivery_callback_alter',
     'drupal_goto_alter',
+    'url_outbound_alter',
   );
   if (in_array($hook, $run_last)) {
     $group = $implementations['ajaxification'];
@@ -85,7 +106,7 @@ function ajaxification_deliver_page($page_callback_result) {
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
   $url = url($_GET['q'], array(
     'absolute' => TRUE,
-    'query' => drupal_get_query_parameters(NULL, array('q', 'ajaxification', 'ajaxification_cfg_id', 'ajaxification_page_state')),
+    'query' => drupal_get_query_parameters(),
   ));
   $html = drupal_render_page($page_callback_result);
   $configuration = _ajaxification_get_active_configuration();
@@ -107,7 +128,7 @@ function _ajaxification_process_ajax_page_state() {
   if (!isset($_REQUEST['ajaxification_page_state']) || !is_string($_REQUEST['ajaxification_page_state'])) {
     return;
   }
-  $page_state = explode('/', $_REQUEST['ajaxification_page_state']);
+  $page_state = explode(' ', $_REQUEST['ajaxification_page_state']);
   if (count($page_state) < 2) {
     return;
   }
@@ -164,9 +185,9 @@ function _ajaxification_parse_response_data($html, $configuration) {
     $data['h1'] = $h1->innerHTML();
   }
 
-  $selector = $configuration['replaceWrapperSelector'];
-  if (isset($configuration['replaceWrapperContextSelector'])) {
-    $selector = $configuration['replaceWrapperContextSelector'] . ' ' . $selector;
+  $selector = $configuration['selectors']['replaceWrapper'];
+  if (isset($configuration['selectors']['replaceWrapperContext'])) {
+    $selector = $configuration['selectors']['replaceWrapperContext'] . ' ' . $selector;
   }
   $data['content'] = qp($doc, $selector)->innerHTML();
 
@@ -182,6 +203,7 @@ function _ajaxification_get_configurations() {
   $configurations =& drupal_static(__FUNCTION__);
   if ($configurations === NULL) {
     $configurations = module_invoke_all('ajaxification_configurations');
+    drupal_alter('ajaxification_configurations', $configurations);
     foreach ($configurations as $id => $configuration) {
       $configurations[$id]['id'] = $id;
     }
