@@ -1,0 +1,17 @@
+
+#ajaxification-progress {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background-color: white;
+  opacity: .6;
+}
+
+#ajaxification-progress .throbber {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+}

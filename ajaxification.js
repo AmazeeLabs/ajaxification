@@ -8,6 +8,7 @@
 
   // Go through configurations, and choose one.
   $.each(settings.configurations, function(cfgId, cfg) {
+    //AXXX also check base path to detect current cfg
     var selector = (cfg.selectors.replaceWrapperContext ? cfg.selectors.replaceWrapperContext + ' ' : '')
         + cfg.selectors.replaceWrapper;
     ajaxification.$replaceWrapper = $(selector);
@@ -166,14 +167,15 @@
        */
       cfg: {
         selectors: {
-          replaceWrapperContext: null,
           replaceWrapper: null,
+          replaceWrapperContext: null,
           triggerRegions: null
         },
         historyApiOnly: null,
         basePaths: null,
         trackPageViewWithGA: null,
         reloadOnHistoryWalk: null
+        //AXXX add disableOnAdminPaths?
       },
 
       /**
@@ -182,7 +184,7 @@
       cfgId: '',
 
       /**
-       * AXXX change it
+       * Element indicating that something happens.
        */
       $progress: $('<div class="ajax-progress ajax-progress-throbber" id="ajaxification-progress"><div class="throbber">&nbsp;</div></div>'),
 
@@ -276,6 +278,12 @@
       restorePageState: function(url) {
         var self = this;
         if (!self.history[url]) {
+          //AXXX probably we should go to the given url here
+          // STR:
+          // 1. do some ajaxificated clicks
+          // 2. do non-ajaxificated click
+          // 3. go back
+          // result: page content is not updated
           return;
         }
 
@@ -311,8 +319,7 @@
         $.each(self.urlVariants(self.cfg.basePaths), function(_, variant) {
           if (url == variant
               || url.indexOf(variant + '/') == 0
-              || url.indexOf(variant + '?') == 0
-              || url.indexOf(variant + '#') == 0) {
+              || url.indexOf(variant + '?') == 0) {
             ret = true;
             return false;
           }
@@ -370,6 +377,14 @@
           type: type,
           data: data,
           success: function(response) {
+
+            //AXXX
+            if (typeof response == 'string') {
+              var match = /<RELOAD>(.*)<\/RELOAD>/.exec(response);
+              window.location.href = match[1];
+              return;
+            }
+
             if (pushState) {
               self.pushState(null, '', response.url);
             }

@@ -2,10 +2,54 @@
 
 require_once 'ajaxification.hacks.inc';
 
+//AXXX add messages support (with a prependTo selector?)
+
+//AXXX perm
+
+//AXXX
+function ajaxification_menu() {
+  $items = array();
+  $items['admin/config/user-interface/ajaxification'] = array(
+    'title' => t('Ajaxification'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_configurations_form'),
+    'access arguments' => array('administer ajaxification configurations'),
+    'file' => 'ajaxification.admin.inc',
+  );
+  return $items;
+}
+
+//AXXX
+function ajaxification_ajaxification_configurations() {
+  $variable_names = db_select('variable', 'v')
+    ->condition('v.name', 'ajaxification_configuration_%', 'LIKE')
+    ->fields('v', array('name'))
+    ->execute()
+    ->fetchCol();
+  $configurations = array();
+  foreach ($variable_names as $variable_name) {
+    $configurations[substr($variable_name, 28)] = variable_get($variable_name, array());
+  }
+  return $configurations;
+}
+
 /**
  * Implements hook_init().
  */
 function ajaxification_init() {
+
+  //AXXX
+  if (_ajaxification_get_active_configuration()
+      && isset($_REQUEST['ajaxification_page_state'])
+      && is_string($_REQUEST['ajaxification_page_state'])
+      && preg_match('#[^ ]+#', $_REQUEST['ajaxification_page_state'], $matches)) {
+    $theme = $matches[0];
+    if ($theme != $GLOBALS['theme']) {
+      _ajaxification_page_reload();
+    }
+  }
+
+  //AXXX
   _ajaxification_the_last_alter('js');
   _ajaxification_the_last_alter('css');
 }
@@ -18,7 +62,9 @@ function ajaxification_preprocess_html(&$html) {
   if (empty($configurations)) {
     return;
   }
-  drupal_add_js(drupal_get_path('module', 'ajaxification') . '/ajaxification.js', array(
+  $path = drupal_get_path('module', 'ajaxification');
+  drupal_add_css($path . '/ajaxification.css');
+  drupal_add_js($path . '/ajaxification.js', array(
     'scope' => 'footer',
   ));
   drupal_add_js(array(
@@ -34,11 +80,9 @@ function ajaxification_preprocess_html(&$html) {
  */
 function ajaxification_drupal_goto_alter(&$path, &$options, &$http_response_code) {
   if ($configuration = _ajaxification_get_active_configuration()) {
-    $url_alter_disabled =& drupal_static('ajaxification_url_outbound_alter_disabled');
-    $url_alter_disabled = TRUE;
     $options['query']['ajaxification_cfg_id'] = $configuration['id'];
     $options['query']['ajaxification_page_state'] = $_REQUEST['ajaxification_page_state'];
-    drupal_static_reset('ajaxification_url_outbound_alter_disabled');
+    $options['ajaxification_url_outbound_alter_disabled'] = TRUE;
   }
 }
 
@@ -46,7 +90,7 @@ function ajaxification_drupal_goto_alter(&$path, &$options, &$http_response_code
  * Implements hook_url_outbound_alter().
  */
 function ajaxification_url_outbound_alter(&$path, &$options, $original_path) {
-  if (drupal_static('ajaxification_url_outbound_alter_disabled')) {
+  if (!empty($options['ajaxification_url_outbound_alter_disabled'])) {
     return;
   }
 
@@ -102,12 +146,11 @@ function ajaxification_page_delivery_callback_alter(&$callback) {
  * Delivery callback.
  */
 function ajaxification_deliver_page($page_callback_result) {
-  //AXXX handle numeric results
+  if (!isset($page_callback_result) || is_int($page_callback_result)) {
+    _ajaxification_page_reload();
+  }
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
-  $url = url($_GET['q'], array(
-    'absolute' => TRUE,
-    'query' => drupal_get_query_parameters(),
-  ));
+  $url = _ajaxification_current_url();
   $html = drupal_render_page($page_callback_result);
   $configuration = _ajaxification_get_active_configuration();
   $data = _ajaxification_parse_response_data($html, $configuration);
@@ -262,4 +305,18 @@ function _ajaxification_resource_to_id_map($set = NULL) {
   }
   $map = variable_get('ajaxification_resource_to_id_map', array('js' => array(), 'css' => array()));
   return $map;
+}
+
+//AXXX
+function _ajaxification_current_url() {
+  return url($_GET['q'], array(
+    'absolute' => TRUE,
+    'query' => drupal_get_query_parameters(),
+  ));
+}
+
+//AXXX
+function _ajaxification_page_reload() {
+  print '<RELOAD>' . _ajaxification_current_url() . '</RELOAD>';
+  drupal_exit();
 }
