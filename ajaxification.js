@@ -8,7 +8,12 @@
 
   // Go through configurations, and choose one.
   $.each(settings.configurations, function(cfgId, cfg) {
-    //AXXX also check base path to detect current cfg
+    if (cfg.historyApiOnly && window.history.pushState) {
+      return;
+    }
+    if (!ajaxification.checkUrl(window.location.href, cfg.basePaths)) {
+      return;
+    }
     var selector = (cfg.selectors.replaceWrapperContext ? cfg.selectors.replaceWrapperContext + ' ' : '')
         + cfg.selectors.replaceWrapper;
     ajaxification.$replaceWrapper = $(selector);
@@ -18,10 +23,7 @@
       return false;
     }
   });
-  if (!ajaxification.$replaceWrapper.size()) {
-    return;
-  }
-  if (ajaxification.cfg.historyApiOnly && !window.history.pushState) {
+  if (!ajaxification.cfgId) {
     return;
   }
 
@@ -143,9 +145,7 @@
   /**
    * Initializes Drupal.ajaxification object and returns it.
    *
-   * The purpose of the function: even if all the code from this file is parsed
-   * on page load, we can prevent execution of the most part of it, if we don't
-   * need it.
+   * @return Drupal.ajaxification
    */
   function initAjaxification() {
     Drupal.ajaxification = {
@@ -180,7 +180,7 @@
       /**
        * The currently  active configuration ID.
        */
-      cfgId: '',
+      cfgId: null,
 
       /**
        * Element indicating that something happens.
@@ -332,11 +332,12 @@
       /**
        * Checks if URL could be ajaxified.
        */
-      checkUrl: function (url) {
+      checkUrl: function (url, basePaths) {
         var self = this;
+        basePaths = basePaths || self.cfg.basePaths;
         var ret = false;
         url = url.toLowerCase();
-        $.each(self.urlVariants(self.cfg.basePaths), function(_, variant) {
+        $.each(self.urlVariants(basePaths), function(_, variant) {
           if (url == variant
               || url.indexOf(variant + '/') == 0
               || url.indexOf(variant + '?') == 0) {
