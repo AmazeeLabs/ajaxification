@@ -12,7 +12,7 @@ function ajaxification_configurations_form($form, &$form_state) {
       '#type' => 'fieldset',
       '#title' => $id === '' ? t('Add new configuration') : $id,
       '#collapsible' => TRUE,
-      '#collapsed' => $id !== '',
+      '#collapsed' => TRUE,
         '#tree' => TRUE,
     );
     $form[$key]['id'] = array(
