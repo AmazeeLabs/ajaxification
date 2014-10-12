@@ -222,8 +222,33 @@
        * Tracks page view with Google Analytics.
        */
       trackPageWithGA: function() {
-        //AXXX update with latest code: https://github.com/AmazeeLabs/exped/blob/ad3c015/sites/all/modules/custom/ajax_search/js/ajax_search.js#L23
-        if (_gaq && _gaq.push) {
+        if (typeof(ga) == 'function') {
+
+          // From the https://developers.google.com/analytics/devguides/collection/analyticsjs/pages
+          // >>>
+          // To send a pageview, you pass the ga function a send command with the
+          // pageview hit type:
+          //   ga('send', 'pageview');
+          // When this command is executed, the analytics.js library sets the title
+          // value using the document.title browser property. The library also sets
+          // the location value using the following browser properties and logic:
+          //   var location = window.location.protocol +
+          //       '//' + window.location.hostname +
+          //        window.location.pathname +
+          //        window.location.search;
+          // Once calculated, the location value is sent to Google Analytics servers
+          // where the rest of the page values are set.
+          // <<<
+          // However, this does not work for some unclear reason. Even if we use
+          // window.history.pushState(), GA sends initial location. Fix this.
+          var location = window.location.protocol + '//' + window.location.hostname
+              + window.location.pathname + window.location.search;
+          ga('set', 'location', location);
+
+          ga('send', 'pageview');
+        }
+        else if (_gaq && _gaq.push) {
+          // Old GA style.
           _gaq.push(['_trackPageview']);
         }
       },
