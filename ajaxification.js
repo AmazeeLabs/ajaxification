@@ -203,6 +203,8 @@
         var self = this;
         window.addEventListener('popstate', function() {
           if (!self.history[window.location.href]) {
+            // @todo (alex): not sure if it's a correct approach.
+            window.location.reload();
             return;
           }
           self.breakAjaxRequest();
@@ -277,12 +279,6 @@
       restorePageState: function(url) {
         var self = this;
         if (!self.history[url]) {
-          //AXXX probably we should go to the given url here
-          // STR:
-          // 1. do some ajaxificated clicks
-          // 2. do non-ajaxificated click
-          // 3. go back
-          // result: page content is not updated
           return;
         }
 
@@ -380,7 +376,15 @@
             // Reload page if needed.
             if (typeof response == 'string') {
               var match = /<RELOAD>(.*)<\/RELOAD>/.exec(response);
-              window.location.href = match[1];
+              if (match) {
+                self.goto(match[1]);
+                return;
+              }
+            }
+
+            // We expect an object here. Make a base check.
+            if (typeof response != 'object' || !response.url) {
+              self.goto(this.url);
               return;
             }
 
@@ -404,9 +408,15 @@
                 $('html, body').animate({scrollTop: offset.top}, 'fast');
               }
             }
+          },
+          error: function() {
+            self.goto(this.url);
           }
-          //AXXX handle errors
         });
+      },
+
+      goto: function(url) {
+        window.location.href = url.replace(/([?&]ajaxification_cfg_id=[^&#]+)|([?&]ajaxification_page_state=[^&#]+)/gi, '');
       },
 
       showProgress: function() {
