@@ -4,7 +4,7 @@
  * Page callback: configurations overview form.
  */
 function ajaxification_configurations_page() {
-  //AXXX add common description before the table
+  // @todo (alex): maybe add weights and tabledrag?
   $configurations = _ajaxification_get_configurations();
   $header = array(
     t('Identifier'),
@@ -40,7 +40,7 @@ function ajaxification_configurations_page() {
   return theme('table', array(
     'header' => $header,
     'rows' => $rows,
-    'empty' => t('No configurations exist yet.'),
+    'empty' => t('Add one ore more configurations to make Ajaxification work.'),
   ));
 }
 
@@ -48,11 +48,19 @@ function ajaxification_configurations_page() {
  * Form callback: ajaxification configuration.
  */
 function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
-  //AXXX add common description
-  //AXXX add descriptions for each fields
+  $form['explanations'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Explanations'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    'common' => array(
+      '#markup' => t('When any site page is loaded (without AJAX), the JavaScript code of the Ajaxification module will go though all defined configurations and test if one of them could be used. The following checks happen:<ol><li>If "History API only" flag is set and user browser does not support History API: skip configuration.</li><li>If current page URL does not start with one of the "Base paths": skip configuration.</li><li>Search for the "Replace wrapper" (which is wrapped with "Replace wrapper context", if set). If not found: skip configuration.</li></ol>The first configuration that passed these checks, sets as active one.'),
+    ),
+  );
   $form['id'] = array(
     '#type' => 'textfield',
     '#title' => t('Identifier'),
+    '#description' => t('Machine name. Use only letters, numbers, and underscore symbols.'),
     '#maxlength' => 100,
     '#required' => TRUE,
     '#default_value' => isset($cfg['id']) ? $cfg['id'] : NULL,
@@ -60,13 +68,16 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
   $form['description'] = array(
     '#type' => 'textfield',
     '#title' => t('Administrative description'),
+    '#description' => t('Description that is only displayed on the configurations overview page.'),
     '#default_value' => isset($cfg['description']) ? $cfg['description'] : NULL,
   );
   $form['basePaths'] = array(
     '#type' => 'textarea',
     '#title' => t('Base paths'),
+    '#description' => t('Drupal internal paths. One per line.<br />The module will check current page URL to determine the active configuration (see the Explanations section).<br />All processes links and forms will be tested to start with one of the provided base path of the active configuration.<br />For example, if you set "search/node" as a base path, the following paths will pass check: "search/node/test", "search/node", "search/node?key=val"; and the following ones will not pass: "search/nodes", "search".'),
     '#default_value' => isset($cfg['basePaths']) ? implode("\n", $cfg['basePaths']) : NULL,
   );
+  //AXXX document other elements
   $form['selectors'] = array(
     '#type' => 'fieldset',
     '#title' => t('Selectors'),
@@ -87,6 +98,11 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
     '#type' => 'textfield',
     '#title' => t('Trigger regions'),
     '#default_value' => isset($cfg['selectors']['triggerRegions']) ? $cfg['selectors']['triggerRegions'] : NULL,
+  );
+  $form['historyApiOnly'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('History API only'),
+    '#default_value' => isset($cfg['historyApiOnly']) ? $cfg['historyApiOnly'] : NULL,
   );
   $form['reloadOnHistoryWalk'] = array(
     '#type' => 'checkbox',
