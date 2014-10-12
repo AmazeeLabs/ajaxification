@@ -1,4 +1,6 @@
 
+/* Progress element */
+
 #ajaxification-progress {
   position: fixed;
   left: 0;
@@ -14,4 +16,10 @@
   position: fixed;
   left: 50%;
   top: 50%;
+}
+
+/* Messages */
+
+.jGrowl .jGrowl-notification.ajaxification-jgrowl {
+  background-color: transparent;
 }

@@ -434,6 +434,19 @@
                 $('html, body').animate({scrollTop: offset.top}, 'fast');
               }
             }
+
+            $('.messages').filter(function() {
+              return !$(this).closest('.jGrowl-message').size()
+            }).remove();
+
+            if (response.messages && $.jGrowl) {
+              $('.jGrowl-notification').trigger('jGrowl.close');
+              $.jGrowl(response.messages, {
+                sticky: true,
+                animateClose: false,
+                group: 'ajaxification-jgrowl'
+              });
+            }
           },
           error: function() {
             self.goto(this.url);

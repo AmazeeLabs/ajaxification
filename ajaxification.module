@@ -4,7 +4,6 @@ require_once 'ajaxification.hacks.inc';
 
 //AXXX: remove hooks, leave UI only.
 //AXXX: since configurations are variables, they can be a part of a feature, but we should have a way to export/import them via UI
-//AXXX add messages support (with a prependTo selector?)
 
 /**
  * Implements hook_permission().
@@ -86,6 +85,14 @@ function ajaxification_preprocess_html(&$html) {
       'configurations' => $configurations,
     ),
   ), 'setting');
+  if (file_exists('sites/all/libraries/jgrowl/jquery.jgrowl.js')) {
+    drupal_add_js('sites/all/libraries/jgrowl/jquery.jgrowl.js', array(
+      'scope' => 'footer',
+    ));
+    drupal_add_css('sites/all/libraries/jgrowl/jquery.jgrowl.css', array(
+      'scope' => 'footer',
+    ));
+  }
   drupal_add_library('system', 'drupal.ajax');
 }
 
@@ -165,6 +172,7 @@ function ajaxification_deliver_page($page_callback_result) {
   }
   drupal_add_http_header('Content-Type', 'application/json; charset=utf-8');
   $url = _ajaxification_current_url();
+  $messages = theme('status_messages');
   $html = drupal_render_page($page_callback_result);
   $configuration = _ajaxification_get_active_configuration();
   $data = _ajaxification_parse_response_data($html, $configuration);
@@ -175,6 +183,7 @@ function ajaxification_deliver_page($page_callback_result) {
   print(drupal_json_encode(array(
     'url' => $url,
     'ajax_commands' => drupal_json_decode($ajax_commands),
+    'messages' => $messages,
   ) + $data));
 }
 
