@@ -2,9 +2,6 @@
 
 require_once 'ajaxification.hacks.inc';
 
-//AXXX: remove hooks, leave UI only.
-//AXXX: since configurations are variables, they can be a part of a feature, but we should have a way to export/import them via UI
-
 /**
  * Implements hook_permission().
  */
@@ -23,28 +20,74 @@ function ajaxification_menu() {
   $items = array();
   $items['admin/config/user-interface/ajaxification'] = array(
     'title' => t('Ajaxification'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ajaxification_configurations_form'),
+    'page callback' => 'ajaxification_configurations_page',
     'access arguments' => array('administer ajaxification configurations'),
+    'file' => 'ajaxification.admin.inc',
+  );
+  $items['admin/config/user-interface/ajaxification/configurations'] = array(
+    'title' => t('Configurations'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items['admin/config/user-interface/ajaxification/configurations/add'] = array(
+    'title' => t('Add configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_configuration_form'),
+    'access arguments' => array('administer ajaxification configurations'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'ajaxification.admin.inc',
+  );
+  $items['admin/config/user-interface/ajaxification/configurations/edit/%ajaxification_cfg'] = array(
+    'title' => t('Edit configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_configuration_form', 6),
+    'access arguments' => array('administer ajaxification configurations'),
+    'file' => 'ajaxification.admin.inc',
+  );
+  $items['admin/config/user-interface/ajaxification/configurations/delete/%ajaxification_cfg'] = array(
+    'title' => t('Delete configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_configuration_delete_form', 6),
+    'access arguments' => array('administer ajaxification configurations'),
+    'file' => 'ajaxification.admin.inc',
+  );
+  $items['admin/config/user-interface/ajaxification/configurations/export/%ajaxification_cfg'] = array(
+    'title' => t('Export configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_configuration_export_form', 6),
+    'access arguments' => array('administer ajaxification configurations'),
+    'file' => 'ajaxification.admin.inc',
+  );
+  $items['admin/config/user-interface/ajaxification/configurations/import'] = array(
+    'title' => t('Import configuration'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_configuration_import_form'),
+    'access arguments' => array('administer ajaxification configurations'),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'ajaxification.admin.inc',
+  );
+  $items['admin/config/user-interface/ajaxification/settings'] = array(
+    'title' => t('Settings'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ajaxification_settings_form'),
+    'access arguments' => array('administer ajaxification configurations'),
+    'type' => MENU_LOCAL_TASK,
     'file' => 'ajaxification.admin.inc',
   );
   return $items;
 }
 
 /**
- * Implements hook_ajaxification_configurations().
+ * Configuration load callback.
+ *
+ * @param string $cfg_id
+ *   Configuration ID.
+ *
+ * @return array|bool
+ *   Configuration array or FALSE.
  */
-function ajaxification_ajaxification_configurations() {
-  $variable_names = db_select('variable', 'v')
-    ->condition('v.name', 'ajaxification_configuration_%', 'LIKE')
-    ->fields('v', array('name'))
-    ->execute()
-    ->fetchCol();
-  $configurations = array();
-  foreach ($variable_names as $variable_name) {
-    $configurations[substr($variable_name, 28)] = variable_get($variable_name, array());
-  }
-  return $configurations;
+function ajaxification_cfg_load($cfg_id) {
+  return _ajaxification_validate_cfg(variable_get('ajaxification_configuration_' . $cfg_id));
 }
 
 /**
@@ -74,6 +117,10 @@ function ajaxification_preprocess_html(&$html) {
   $configurations = _ajaxification_get_configurations();
   if (empty($configurations)) {
     return;
+  }
+  foreach ($configurations as $configuration) {
+    // Description is administrative only. Do not pass to the front-end.
+    unset($configuration['description']);
   }
   $path = drupal_get_path('module', 'ajaxification');
   drupal_add_css($path . '/ajaxification.css');
@@ -268,13 +315,45 @@ function _ajaxification_parse_response_data($html, $configuration) {
 function _ajaxification_get_configurations() {
   $configurations =& drupal_static(__FUNCTION__);
   if ($configurations === NULL) {
-    $configurations = module_invoke_all('ajaxification_configurations');
-    drupal_alter('ajaxification_configurations', $configurations);
-    foreach ($configurations as $id => $configuration) {
-      $configurations[$id]['id'] = $id;
-    }
+    $query = db_select('variable', 'v');
+    $query->condition('v.name', 'ajaxification_configuration_%', 'LIKE');
+    $alias = $query->addExpression('SUBSTR(v.name, 29)');
+    $query->orderBy($alias);
+    $ids = $query->execute()->fetchCol();
+    $configurations = array_filter(array_map('ajaxification_cfg_load', $ids));
   }
   return $configurations;
+}
+
+/**
+ * Validates ajaxification configuration.
+ *
+ * @param array $cfg
+ *   Configuration to validate.
+ * @param array|null $form
+ *   If there is validation error and form is provided: form error will be set.
+ *
+ * @return array|bool
+ *   Returns configuration on successful validation. FALSE otherwise.
+ */
+function _ajaxification_validate_cfg($cfg, &$form = NULL) {
+  if (!is_array($cfg) || !isset($cfg['id']) || !is_string($cfg['id'])) {
+    return FALSE;
+  }
+  $cfg['id'] = trim($cfg['id']);
+  if ($cfg['id'] === '') {
+    return FALSE;
+  }
+  if (preg_match('#[^a-zA-Z0-9_]#', $cfg['id'])) {
+    if ($form) {
+      form_error($form['id'], t('Identifier must only contain letters, numbers, and underscore symbol.'));
+    }
+    return FALSE;
+  }
+  if (empty($cfg['selectors']['replaceWrapper'])) {
+    return FALSE;
+  }
+  return $cfg;
 }
 
 /**
