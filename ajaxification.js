@@ -175,7 +175,6 @@
         basePaths: null,
         trackPageViewWithGA: null,
         reloadOnHistoryWalk: null
-        //AXXX add disableOnAdminPaths?
       },
 
       /**
@@ -378,7 +377,7 @@
           data: data,
           success: function(response) {
 
-            //AXXX
+            // Reload page if needed.
             if (typeof response == 'string') {
               var match = /<RELOAD>(.*)<\/RELOAD>/.exec(response);
               window.location.href = match[1];
@@ -410,13 +409,11 @@
         });
       },
 
-      //AXXX doc
       showProgress: function() {
         var self = this;
         $('body').append(self.$progress);
       },
 
-      //AXXX doc
       hideProgress: function() {
         $('#ajaxification-progress').remove();
       },

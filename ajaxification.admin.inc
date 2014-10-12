@@ -1,6 +1,8 @@
 <?php
 
-//AXXX
+/**
+ * Form callback: ajaxification configurations UI.
+ */
 function ajaxification_configurations_form($form, &$form_state) {
   //AXXX add common description
   //AXXX add descriptions for each fields
@@ -59,11 +61,15 @@ function ajaxification_configurations_form($form, &$form_state) {
   return system_settings_form($form);
 }
 
-//AXXX
+/**
+ * Form validate callback: ajaxification configurations UI.
+ */
 function ajaxification_configurations_form_validate(&$form, &$form_state) {
   foreach ($form_state['values'] as $key => $cfg) {
     if (strpos($key, 'ajaxification_configuration_') === 0) {
       $cfg['id'] = trim($cfg['id']);
+      //AXXX validate ID as machine name
+      //AXXX validate replace-wrapper as mandatory
       $cfg['basePaths'] = array_filter(explode("\n", $cfg['basePaths'])) ?: array('');
       unset($form_state['values'][$key]);
       if ($cfg['id'] !== '') {
@@ -73,7 +79,9 @@ function ajaxification_configurations_form_validate(&$form, &$form_state) {
   }
 }
 
-//AXXX
+/**
+ * Form submit callback: ajaxification configurations UI.
+ */
 function ajaxification_configurations_form_submit(&$form, &$form_state) {
   $cfg_ids = array();
   foreach ($form_state['values'] as $key => $cfg) {

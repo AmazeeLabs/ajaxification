@@ -4,9 +4,20 @@ require_once 'ajaxification.hacks.inc';
 
 //AXXX add messages support (with a prependTo selector?)
 
-//AXXX perm
+/**
+ * Implements hook_permission().
+ */
+function aggregator_permission() {
+  return array(
+    'administer ajaxification configurations' => array(
+      'title' => t('Administer Ajaxification configurations'),
+    ),
+  );
+}
 
-//AXXX
+/**
+ * Implements hook_menu().
+ */
 function ajaxification_menu() {
   $items = array();
   $items['admin/config/user-interface/ajaxification'] = array(
@@ -19,7 +30,9 @@ function ajaxification_menu() {
   return $items;
 }
 
-//AXXX
+/**
+ * Implements hook_ajaxification_configurations().
+ */
 function ajaxification_ajaxification_configurations() {
   $variable_names = db_select('variable', 'v')
     ->condition('v.name', 'ajaxification_configuration_%', 'LIKE')
@@ -38,7 +51,7 @@ function ajaxification_ajaxification_configurations() {
  */
 function ajaxification_init() {
 
-  //AXXX
+  // Reload page if theme has changed.
   if (_ajaxification_get_active_configuration()
       && isset($_REQUEST['ajaxification_page_state'])
       && is_string($_REQUEST['ajaxification_page_state'])
@@ -49,7 +62,6 @@ function ajaxification_init() {
     }
   }
 
-  //AXXX
   _ajaxification_the_last_alter('js');
   _ajaxification_the_last_alter('css');
 }
@@ -307,7 +319,9 @@ function _ajaxification_resource_to_id_map($set = NULL) {
   return $map;
 }
 
-//AXXX
+/**
+ * Returns absolute current URL.
+ */
 function _ajaxification_current_url() {
   return url($_GET['q'], array(
     'absolute' => TRUE,
@@ -315,7 +329,9 @@ function _ajaxification_current_url() {
   ));
 }
 
-//AXXX
+/**
+ * Returns a response which triggers immediate page reload.
+ */
 function _ajaxification_page_reload() {
   print '<RELOAD>' . _ajaxification_current_url() . '</RELOAD>';
   drupal_exit();
