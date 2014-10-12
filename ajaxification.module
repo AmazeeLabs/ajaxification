@@ -2,6 +2,8 @@
 
 require_once 'ajaxification.hacks.inc';
 
+//AXXX: remove hooks, leave UI only.
+//AXXX: since configurations are variables, they can be a part of a feature, but we should have a way to export/import them via UI
 //AXXX add messages support (with a prependTo selector?)
 
 /**

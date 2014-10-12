@@ -1,5 +1,7 @@
 <?php
 
+//AXXX rewrite UI, make it more standard, with separate "New cfg" links, etc.
+
 /**
  * Form callback: ajaxification configurations UI.
  */
