@@ -201,21 +201,23 @@
        */
       handleHistoryButtons: function() {
         var self = this;
-        window.addEventListener('popstate', function() {
-          if (!self.history[window.location.href]) {
-            // @todo (alex): not sure if it's a correct approach.
-            window.location.reload();
-            return;
-          }
-          self.breakAjaxRequest();
-          Drupal.settings = self.history[window.location.href].settings;
-          if (self.cfg.reloadOnHistoryWalk) {
-            self.doAjax(window.location.href, null, null, false);
-          }
-          else {
-            self.restorePageState(window.location.href);
-          }
-        });
+        if (window.addEventListener) {
+          window.addEventListener('popstate', function () {
+            if (!self.history[window.location.href]) {
+              // @todo (alex): not sure if it's a correct approach.
+              window.location.reload();
+              return;
+            }
+            self.breakAjaxRequest();
+            Drupal.settings = self.history[window.location.href].settings;
+            if (self.cfg.reloadOnHistoryWalk) {
+              self.doAjax(window.location.href, null, null, false);
+            }
+            else {
+              self.restorePageState(window.location.href);
+            }
+          });
+        }
       },
 
       /**
