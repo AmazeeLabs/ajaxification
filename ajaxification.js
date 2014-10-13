@@ -8,7 +8,7 @@
 
   // Go through configurations, and choose one.
   $.each(settings.configurations, function(cfgId, cfg) {
-    if (cfg.historyApiOnly && window.history.pushState) {
+    if (cfg.historyApiOnly && !window.history.pushState) {
       return;
     }
     if (!ajaxification.checkUrl(window.location.href, cfg.basePaths)) {
