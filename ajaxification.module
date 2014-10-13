@@ -118,9 +118,9 @@ function ajaxification_preprocess_html(&$html) {
   if (empty($configurations)) {
     return;
   }
-  foreach ($configurations as $configuration) {
+  foreach ($configurations as $id => $configuration) {
     // Description is administrative only. Do not pass to the front-end.
-    unset($configuration['description']);
+    unset($configurations[$id]['description']);
   }
   $path = drupal_get_path('module', 'ajaxification');
   drupal_add_css($path . '/ajaxification.css');
@@ -320,7 +320,7 @@ function _ajaxification_get_configurations() {
     $alias = $query->addExpression('SUBSTR(v.name, 29)');
     $query->orderBy($alias);
     $ids = $query->execute()->fetchCol();
-    $configurations = array_filter(array_map('ajaxification_cfg_load', $ids));
+    $configurations = array_filter(array_map('ajaxification_cfg_load', drupal_map_assoc($ids)));
   }
   return $configurations;
 }
