@@ -1,5 +1,8 @@
 <?php
 
+//AXXX check IE8
+//AXXX update readme
+
 require_once 'ajaxification.hacks.inc';
 
 /**
