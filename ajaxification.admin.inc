@@ -77,41 +77,47 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
     '#description' => t('Drupal internal paths. One per line.<br />The module will check current page URL to determine the active configuration (see the Explanations section).<br />All processes links and forms will be tested to start with one of the provided base path of the active configuration.<br />For example, if you set "search/node" as a base path, the following paths will pass check: "search/node/test", "search/node", "search/node?key=val"; and the following ones will not pass: "search/nodes", "search".'),
     '#default_value' => isset($cfg['basePaths']) ? implode("\n", $cfg['basePaths']) : NULL,
   );
-  //AXXX document other elements
   $form['selectors'] = array(
     '#type' => 'fieldset',
     '#title' => t('Selectors'),
+    '#description' => t('jQuery selectors.'),
     '#tree' => TRUE,
   );
   $form['selectors']['replaceWrapper'] = array(
     '#type' => 'textfield',
     '#title' => t('Replace wrapper'),
+    '#description' => t('The main selector defining the region to be replaced by the AJAX call. Should return one element.'),
     '#required' => TRUE,
     '#default_value' => isset($cfg['selectors']['replaceWrapper']) ? $cfg['selectors']['replaceWrapper'] : NULL,
   );
   $form['selectors']['replaceWrapperContext'] = array(
     '#type' => 'textfield',
     '#title' => t('Replace wrapper context'),
+    '#description' => t('Used to specify the "Replace wrapper" surrounding. For example: "body.node-type-article". Used only for detecting active configuration (see the Explanations section).'),
     '#default_value' => isset($cfg['selectors']['replaceWrapperContext']) ? $cfg['selectors']['replaceWrapperContext'] : NULL,
   );
   $form['selectors']['triggerRegions'] = array(
     '#type' => 'textfield',
     '#title' => t('Trigger regions'),
+    '#description' => t('Defines one or more areas inside the "Replace wrapper" where link clicks and form submits should be processed with AJAX. If omitted, the whole "Replace wrapper" is used.'),
     '#default_value' => isset($cfg['selectors']['triggerRegions']) ? $cfg['selectors']['triggerRegions'] : NULL,
   );
   $form['historyApiOnly'] = array(
     '#type' => 'checkbox',
     '#title' => t('History API only'),
+    '#description' => t('History API is a browser feature allowing change URL path without page reload. If this flag is not set and user browser does not support History API: URLs won\'t be updated during AJAX navigation.'),
     '#default_value' => isset($cfg['historyApiOnly']) ? $cfg['historyApiOnly'] : NULL,
   );
   $form['reloadOnHistoryWalk'] = array(
     '#type' => 'checkbox',
     '#title' => t('Reload on history walk'),
+    '#description' => t('Force content reload when user clicks Back browser button.'),
     '#default_value' => isset($cfg['reloadOnHistoryWalk']) ? $cfg['reloadOnHistoryWalk'] : NULL,
   );
   $form['trackPageViewWithGA'] = array(
     '#type' => 'checkbox',
     '#title' => t('Track page view with Google Analytics'),
+    '#description' => t('If this flag is set and you have google Analytics installed, AJAX navigation will send pageView events to GA.'),
     '#default_value' => isset($cfg['trackPageViewWithGA']) ? $cfg['trackPageViewWithGA'] : NULL,
   );
   $form['actions'] = array('#type' => 'actions');
