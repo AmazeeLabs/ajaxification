@@ -6,7 +6,9 @@ form submits.
 ## Message support
 If you want Drupal messages support: install 
 [jGrowl](https://github.com/stanlemon/jGrowl) at
-`sites/all/modules/jgrowl`
+`sites/all/libraries/jgrowl`:
+
+    git submodule add git@github.com:stanlemon/jGrowl.git sites/all/libraries/jgrowl
 
 ## hook_ajaxification_configurations()
 
