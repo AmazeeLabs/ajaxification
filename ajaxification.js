@@ -82,7 +82,7 @@
                   if ($submit.data('events')) {
                     $.each($submit.data('events'), function(eventType, handlers) {
                       $.each(handlers, function(key, handler) {
-                        if (handler.handler.toString().match(/return ajax\./gi)) {
+                        if (handler && handler.handler && handler.handler.toString().match(/return ajax\./gi)) {
                           $submit.unbind(eventType, handler.handler);
                         }
                       });
