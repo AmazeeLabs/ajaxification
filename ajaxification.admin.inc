@@ -101,6 +101,7 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
     '#title' => t('Trigger regions'),
     '#description' => t('Defines one or more areas inside the "Replace wrapper" where link clicks and form submits should be processed with AJAX. If omitted, the whole "Replace wrapper" is used.'),
     '#default_value' => isset($cfg['selectors']['triggerRegions']) ? $cfg['selectors']['triggerRegions'] : NULL,
+    '#maxlength' => 512,
   );
   $form['historyApiOnly'] = array(
     '#type' => 'checkbox',
