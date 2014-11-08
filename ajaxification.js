@@ -261,13 +261,20 @@
       request: false,
 
       /**
+       * Indicates that request is aborting by ours.
+       */
+      abortingRequest: false,
+
+      /**
        * Breaks AJAX request, if there is one.
        */
       breakAjaxRequest: function() {
         var self = this;
         if (typeof(self.request) == 'object') {
+          self.abortingRequest = true;
           self.request.abort();
           self.request = false;
+          self.abortingRequest = false;
         }
         self.hideProgress();
       },
@@ -451,7 +458,9 @@
             }
           },
           error: function() {
-            self.goto(this.url);
+            if (!self.abortingRequest) {
+              self.goto(this.url);
+            }
           }
         });
       },
