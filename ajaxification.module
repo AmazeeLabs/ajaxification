@@ -397,6 +397,16 @@ function _ajaxification_process_resources($data, $type) {
   }
   _ajaxification_resource_to_id_map($map);
   if (_ajaxification_get_configurations()) {
+    // First cleanup old values if any.
+    $javascript =& drupal_static('drupal_add_js', array());
+    if (!empty($javascript['settings']['data'])) {
+      foreach ($javascript['settings']['data'] as $key => $value) {
+        if (is_array($value) && isset($value['ajaxification']['resource_to_id_map'][$type])) {
+          unset($javascript['settings']['data'][$key]['ajaxification']['resource_to_id_map'][$type]);
+        }
+      }
+    }
+    unset($javascript);
     drupal_add_js(array('ajaxification' => array('resource_to_id_map' => $map)), 'setting');
   }
 }
