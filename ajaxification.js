@@ -441,7 +441,12 @@
             if (self.cfg.selectors.scrollTo) {
               var offset = $(self.cfg.selectors.scrollTo).eq(0).offset();
               if (offset && offset.top) {
-                $('html, body').animate({scrollTop: offset.top}, 'fast');
+                var top = offset.top;
+                var $adminMenu = $('#admin-menu');
+                if ($adminMenu.size()) {
+                  top -= $adminMenu.height();
+                }
+                $('html, body').animate({scrollTop: top}, 'fast');
               }
             }
 
