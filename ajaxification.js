@@ -169,7 +169,8 @@
         selectors: {
           replaceWrapper: null,
           replaceWrapperContext: null,
-          triggerRegions: null
+          triggerRegions: null,
+          scrollTo: null
         },
         historyApiOnly: null,
         basePaths: null,

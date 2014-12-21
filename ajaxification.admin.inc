@@ -103,6 +103,12 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
     '#default_value' => isset($cfg['selectors']['triggerRegions']) ? $cfg['selectors']['triggerRegions'] : NULL,
     '#maxlength' => 512,
   );
+  $form['selectors']['scrollTo'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Scroll to'),
+    '#description' => t('The window top will be scrolled to the element defined by this selector after the page content updated.'),
+    '#default_value' => isset($cfg['selectors']['scrollTo']) ? $cfg['selectors']['scrollTo'] : NULL,
+  );
   $form['historyApiOnly'] = array(
     '#type' => 'checkbox',
     '#title' => t('History API only'),
