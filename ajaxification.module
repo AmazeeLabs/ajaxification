@@ -389,7 +389,7 @@ function _ajaxification_get_active_configuration() {
 function _ajaxification_process_resources($data, $type) {
   $map = _ajaxification_resource_to_id_map();
   foreach ($data as $key => $_data) {
-    if ($_data['type'] == 'file') {
+    if ($_data['type'] == 'file' || $_data['type'] == 'external') {
       if (!isset($map[$type][$key])) {
         $map[$type][$key] = base_convert(count($map['css']) + count($map['js']), 10, 36);
       }
