@@ -250,7 +250,7 @@
 
           ga('send', 'pageview');
         }
-        else if (_gaq && _gaq.push) {
+        else if (typeof(_gaq) != 'undefined' && _gaq.push) {
           // Old GA style.
           _gaq.push(['_trackPageview']);
         }
