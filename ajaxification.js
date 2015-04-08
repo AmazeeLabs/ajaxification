@@ -397,6 +397,12 @@
         for (var resourceType in {js: '', css: ''}) {
           for (var key in Drupal.settings.ajaxPageState[resourceType]) {
             if (Drupal.settings.ajaxification.resource_to_id_map[resourceType][key]) {
+              // Sometimes, in case of bad settings merge, an item could be an
+              // array instead of a string. Fix this.
+              var item = Drupal.settings.ajaxification.resource_to_id_map[resourceType][key];
+              if (Object.prototype.toString.call(item) === '[object Array]') {
+                item = item.pop();
+              }
               state.push(Drupal.settings.ajaxification.resource_to_id_map[resourceType][key]);
             }
           }
