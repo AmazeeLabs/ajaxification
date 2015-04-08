@@ -407,7 +407,7 @@
             }
           }
         }
-        data.push({name: 'ajaxification_page_state', value: state.join(' ')});
+        data.push({name: 'ajaxification_page_state', value: state.join('-')});
 
         self.request = $.ajax({
           url: url,
