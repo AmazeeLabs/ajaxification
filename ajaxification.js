@@ -452,6 +452,12 @@
                 if ($adminMenu.size()) {
                   top -= $adminMenu.height();
                 }
+                if (self.cfg.selectors.scrollToOffsetElement) {
+                  var $offsetElement = $(self.cfg.selectors.scrollToOffsetElement);
+                  if ($offsetElement.size()) {
+                    top -= $offsetElement.height();
+                  }
+                }
                 $('html, body').animate({scrollTop: top}, 'fast');
               }
             }

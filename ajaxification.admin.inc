@@ -109,6 +109,17 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
     '#description' => t('The window top will be scrolled to the element defined by this selector after the page content updated.'),
     '#default_value' => isset($cfg['selectors']['scrollTo']) ? $cfg['selectors']['scrollTo'] : NULL,
   );
+  $form['selectors']['scrollToOffsetElement'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Scroll to: offset element'),
+    '#description' => t('If you have a sticky header with "position: fixed", set here its selector. Example: .sticky-wrapper.is-sticky'),
+    '#default_value' => isset($cfg['selectors']['scrollToOffsetElement']) ? $cfg['selectors']['scrollToOffsetElement'] : NULL,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="selectors[scrollTo]"]' => array('empty' => FALSE),
+      ),
+    ),
+  );
   $form['historyApiOnly'] = array(
     '#type' => 'checkbox',
     '#title' => t('History API only'),
