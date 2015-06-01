@@ -3,12 +3,18 @@
 The module allows ajaxify any part of a Drupal site. It handles link clicks and
 form submits.
 
+## Configuration
+
+Visit `admin/config/user-interface/ajaxification` path after the module installation.
+
 ## Message support
 If you want Drupal messages support: install 
 [jGrowl](https://github.com/stanlemon/jGrowl) at
 `sites/all/libraries/jgrowl`:
 
     git submodule add git@github.com:stanlemon/jGrowl.git sites/all/libraries/jgrowl
+    
+# The following info is outdated!
 
 ## hook_ajaxification_configurations()
 
