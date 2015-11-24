@@ -124,6 +124,30 @@
             }
           }
         }
+        // The facetapi_select can also use the "onchange" attribute.
+        $('select[onchange]', $region).each(function() {
+          var $select = $(this);
+          // Double check it by "id" attribute.
+          var id = $select.attr('id');
+          if (id && id.substr(0, 16) == 'facetapi_select_') {
+            // Now double check the "onchange" attribute.
+            var onchange = $select.attr('onchange');
+            if (onchange.substr(0, 42) == 'top.location.href=document.getElementById(' && onchange.substr(-22) == ').selectedIndex].value') {
+              var evalValue = onchange.substr(18);
+              // Replace original handler with ours.
+              $select[0].removeAttribute('onchange');
+              $select.change(function() {
+                var url = eval(evalValue);
+                if (url && ajaxification.checkUrl(url)) {
+                  ajaxification.doAjax(url);
+                }
+                else {
+                  eval(onchange);
+                }
+              });
+            }
+          }
+        });
       });
     }
   };
