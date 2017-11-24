@@ -1,5 +1,12 @@
 (function($) {
 
+  // Create ":parents" jQuery selector.
+  if (!$.expr[':'].parents) {
+    $.expr[':'].parents = function(a, i, m) {
+      return jQuery(a).parents(m[3]).length < 1;
+    };
+  }
+
   // Initialize settings.
   var settings = Drupal.settings.ajaxification;
 
@@ -95,14 +102,18 @@
         });
 
         // Prevent links clicks. Do it via ajax.
-        $region.find('a').once('ajaxification-click').click(function() {
-          var $link = $(this);
-          var url = decodeURIComponent($link.attr('href'));
-          if (ajaxification.checkUrl(url)) {
-            ajaxification.doAjax(url);
-            return false;
-          }
-        });
+        $region.find('a')
+          // Don't process views_load_more pager.
+          .filter(':parents(.pager-load-more)')
+          .once('ajaxification-click')
+          .click(function () {
+            var $link = $(this);
+            var url = decodeURIComponent($link.attr('href'));
+            if (ajaxification.checkUrl(url)) {
+              ajaxification.doAjax(url);
+              return false;
+            }
+          });
 
         // Fix facetapi_select module behavior. Unbind original handler, and
         // bind own.
