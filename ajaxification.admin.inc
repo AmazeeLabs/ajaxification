@@ -265,6 +265,6 @@ function ajaxification_configuration_import_form_submit(&$form, &$form_state) {
  * Form submit callback: ajaxification settings.
  */
 function ajaxification_settings_form($form, &$form_state) {
-  //AXXX add jgrowl settings
+  // @todo: add jgrowl settings
   return $form;
 }
