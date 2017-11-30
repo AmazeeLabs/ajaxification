@@ -228,6 +228,14 @@
        */
       pushState: function(data,title,url) {
         if (window.history.pushState) {
+
+          // For the case of developing on localhost.
+          if (window.location.hostname === 'localhost') {
+            var urlObject = document.createElement('a');
+            urlObject.href = url;
+            url = urlObject.pathname + urlObject.search + urlObject.hash;
+          }
+
           window.history.pushState(data,title,url);
         }
       },
