@@ -162,7 +162,7 @@ function ajaxification_configuration_form($form, &$form_state, $cfg = NULL) {
  * Form validate callback: ajaxification configuration.
  */
 function ajaxification_configuration_form_validate(&$form, &$form_state) {
-  $form_state['values']['basePaths'] = array_filter(explode("\n", $form_state['values']['basePaths'])) ?: array('');
+  $form_state['values']['basePaths'] = array_filter(array_map('trim', explode("\n", $form_state['values']['basePaths']))) ?: array('');
   $form_state['values'] = _ajaxification_validate_cfg($form_state['values'], $form);
 }
 
