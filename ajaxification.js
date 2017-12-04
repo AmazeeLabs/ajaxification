@@ -78,7 +78,7 @@
                     }
                   }
                 }
-                ajaxification.doAjax(url, $form.attr('method'), data, ajaxification.cfg.selectors.scrollTo);
+                ajaxification.doAjax(url, $form.attr('method'), data);
                 return false;
               });
               // Remove core ajax handlers from submit buttons. This can be
@@ -424,7 +424,7 @@
        */
       doAjax: function(url, type, data, pushState) {
         var self = this;
-        pushState = (typeof(pushState) == 'undefined') ? true : pushState;
+        pushState = (typeof(pushState) === 'undefined') ? true : pushState;
         self.breakAjaxRequest();
         self.showProgress();
         type = type || 'get';
